@@ -9,9 +9,9 @@ import io.strimzi.api.kafka.model.topic.KafkaTopicStatusBuilder;
 import io.strimzi.api.kafka.model.topic.ReplicasChangeStatusBuilder;
 import io.strimzi.operator.common.Reconciliation;
 import io.strimzi.operator.common.ReconciliationLogger;
-import io.strimzi.operator.topic.cruisecontrol.CruiseControlClient;
-import io.strimzi.operator.topic.cruisecontrol.CruiseControlClient.TaskState;
-import io.strimzi.operator.topic.cruisecontrol.CruiseControlClient.UserTasksResponse;
+import io.strimzi.operator.common.operator.resource.cruisecontrol.CruiseControlClient;
+import io.strimzi.operator.common.operator.resource.cruisecontrol.CruiseControlClient.TaskState;
+import io.strimzi.operator.common.operator.resource.cruisecontrol.CruiseControlClient.UserTasksResponse;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,7 +39,7 @@ import static org.apache.logging.log4j.core.util.Throwables.getRootCause;
  * <li>Ongoing: In Cruise Control's task queue, but execution not started, or not completed.</li>
  * <li>Completed: Cruise Control's task execution completed (target replication factor reconciled).</li></ul>
  */
-public class ReplicasChangeHandler {
+class ReplicasChangeHandler {
     private static final ReconciliationLogger LOGGER = ReconciliationLogger.create(ReplicasChangeHandler.class);
     
     private final CruiseControlClient cruiseControlClient;
@@ -49,7 +49,7 @@ public class ReplicasChangeHandler {
      * 
      * @param config Topic Operator configuration.
      */
-    public ReplicasChangeHandler(TopicOperatorConfig config) {
+    ReplicasChangeHandler(TopicOperatorConfig config) {
         this.cruiseControlClient = CruiseControlClient.create(
             config.cruiseControlHostname(),
             config.cruiseControlPort(),
@@ -122,7 +122,7 @@ public class ReplicasChangeHandler {
 
         try {
             LOGGER.debugOp("Sending user tasks request, Tasks {}", groupByUserTaskId.keySet());
-            UserTasksResponse utr = cruiseControlClient.userTasks(groupByUserTaskId.keySet());
+            UserTasksResponse utr = cruiseControlClient.userTasks(groupByUserTaskId.keySet(), false);
 
             if (utr.userTasks().isEmpty()) {
                 // Cruise Control restarted: reset the state because the tasks queue is not persisted
@@ -150,7 +150,7 @@ public class ReplicasChangeHandler {
         }
         return result;
     }
-    
+
     private static byte[] getFileContent(String filePath) {
         try {
             return Files.readAllBytes(Path.of(filePath));

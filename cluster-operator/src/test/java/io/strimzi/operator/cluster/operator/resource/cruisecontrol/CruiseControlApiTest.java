@@ -37,7 +37,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(VertxExtension.class)
-public class CruiseControlClientTest {
+public class CruiseControlApiTest {
 
     private static final String HOST = "localhost";
 
@@ -50,8 +50,8 @@ public class CruiseControlClientTest {
     @BeforeAll
     public static void setupServer() throws IOException {
         cruiseControlPort = TestUtils.getFreePort();
-        File tlsKeyFile = TestUtils.tempFile(CruiseControlClientTest.class.getSimpleName(), ".key");
-        File tlsCrtFile = TestUtils.tempFile(CruiseControlClientTest.class.getSimpleName(), ".crt");
+        File tlsKeyFile = TestUtils.tempFile(CruiseControlApiTest.class.getSimpleName(), ".key");
+        File tlsCrtFile = TestUtils.tempFile(CruiseControlApiTest.class.getSimpleName(), ".crt");
         
         new MockCertManager().generateSelfSignedCert(tlsKeyFile, tlsCrtFile,
             new Subject.Builder().withCommonName("Trusted Test CA").build(), 365);

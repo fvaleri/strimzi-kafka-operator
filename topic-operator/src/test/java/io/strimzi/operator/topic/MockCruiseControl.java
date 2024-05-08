@@ -20,10 +20,14 @@ import org.mockserver.model.Parameter;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
-import static io.strimzi.operator.topic.TopicOperatorTestUtil.contentFromTextFile;
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -43,7 +47,7 @@ public class MockCruiseControl {
      */
     public MockCruiseControl(int serverPort, File tlsKeyFile, File tlsCrtFile) {
         try {
-            ConfigurationProperties.logLevel("WARN");
+            ConfigurationProperties.logLevel("WARN"); // set to INFO to get expected and actual requests
             ConfigurationProperties.certificateAuthorityPrivateKey(tlsKeyFile.getAbsolutePath());
             ConfigurationProperties.certificateAuthorityCertificate(tlsCrtFile.getAbsolutePath());
 
@@ -71,6 +75,18 @@ public class MockCruiseControl {
 
     public boolean isRunning() {
         return server.isRunning();
+    }
+    
+    private static String contentFromTextFile(File filePath) {
+        try {
+            var resourceURI = Objects.requireNonNull(filePath).toURI();
+            try (var lines = Files.lines(Paths.get(resourceURI), UTF_8)) {
+                var content = lines.reduce((x, y) -> x + y);
+                return content.orElseThrow(() -> new IOException(format("File %s is empty", filePath.getAbsolutePath())));
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     public void expectTopicConfigSuccessResponse(File apiUserFile, File apiPassFile) {

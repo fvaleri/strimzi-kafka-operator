@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ReplicasChangeHandlerTest {
     private static final String TEST_NAMESPACE = "replicas-change";
     private static final String TEST_NAME = "my-topic";
-    
+
     private static int serverPort;
     private static File tlsCrtFile;
     private static File apiUserFile;
@@ -63,7 +63,7 @@ public class ReplicasChangeHandlerTest {
         try (PrintWriter out = new PrintWriter(apiPassFile.getAbsolutePath())) {
             out.print("changeit");
         }
-        
+
         server = new MockCruiseControl(serverPort, tlsKeyFile, tlsCrtFile);
     }
 
@@ -96,7 +96,7 @@ public class ReplicasChangeHandlerTest {
         var completedAndFailed = handler.requestOngoingChanges(ongoing);
         assertCompleted(completedAndFailed);
     }
-    
+
     @Test
     public void shouldFailWithSslEnabledAndMissingCrtFile() {
         var config = TopicOperatorConfig.buildFromMap(Map.ofEntries(
@@ -152,9 +152,9 @@ public class ReplicasChangeHandlerTest {
             entry(TopicOperatorConfig.CRUISE_CONTROL_HOSTNAME.key(), "invalid"),
             entry(TopicOperatorConfig.CRUISE_CONTROL_PORT.key(), String.valueOf(serverPort))
         ));
-        
+
         var handler = new ReplicasChangeHandler(config);
-        
+
         var pending = buildPendingReconcilableTopics();
         var pendingAndOngoing = handler.requestPendingChanges(pending);
         assertFailedWithMessage(pendingAndOngoing, "Replicas change failed, Connection failed");
@@ -281,18 +281,18 @@ public class ReplicasChangeHandlerTest {
             .build();
         var kafkaTopic = new KafkaTopicBuilder()
             .withNewMetadata()
-                .withName(TEST_NAME)
-                .withNamespace(TEST_NAMESPACE)
-                .addToLabels("key", "VALUE")
+            .withName(TEST_NAME)
+            .withNamespace(TEST_NAMESPACE)
+            .addToLabels("key", "VALUE")
             .endMetadata()
             .withNewSpec()
-                .withPartitions(25)
-                .withReplicas(++replicationFactor)
+            .withPartitions(25)
+            .withReplicas(++replicationFactor)
             .endSpec()
             .withStatus(status)
             .build();
         return List.of(new ReconcilableTopic(
-            new Reconciliation("test", RESOURCE_KIND, TEST_NAMESPACE, TEST_NAME), 
+            new Reconciliation("test", RESOURCE_KIND, TEST_NAMESPACE, TEST_NAME),
             kafkaTopic, TopicOperatorUtil.topicName(kafkaTopic)));
     }
 
@@ -312,18 +312,18 @@ public class ReplicasChangeHandlerTest {
             .build();
         var kafkaTopic = new KafkaTopicBuilder()
             .withNewMetadata()
-                .withName(TEST_NAME)
-                .withNamespace(TEST_NAMESPACE)
-                .addToLabels("key", "VALUE")
+            .withName(TEST_NAME)
+            .withNamespace(TEST_NAMESPACE)
+            .addToLabels("key", "VALUE")
             .endMetadata()
             .withNewSpec()
-                .withPartitions(25)
-                .withReplicas(3)
+            .withPartitions(25)
+            .withReplicas(3)
             .endSpec()
             .withStatus(status)
             .build();
         return List.of(new ReconcilableTopic(
-            new Reconciliation("test", RESOURCE_KIND, TEST_NAMESPACE, TEST_NAME), 
+            new Reconciliation("test", RESOURCE_KIND, TEST_NAMESPACE, TEST_NAME),
             kafkaTopic, TopicOperatorUtil.topicName(kafkaTopic)));
     }
 

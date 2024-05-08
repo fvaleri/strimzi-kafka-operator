@@ -21,7 +21,7 @@ public interface CruiseControlApi {
     String CC_REST_API_PROGRESS_KEY = "progress";
 
     /**
-     *  Gets the state of the Cruise Control server.
+     * Gets the state of the Cruise Control server.
      *
      * @param host The address of the Cruise Control server.
      * @param port The port the Cruise Control Server is listening on.
@@ -31,7 +31,7 @@ public interface CruiseControlApi {
     Future<CruiseControlResponse> getCruiseControlState(String host, int port, boolean verbose);
 
     /**
-     *  Send a request to the Cruise Control server to perform a cluster rebalance.
+     * Send a request to the Cruise Control server to perform a cluster rebalance.
      *
      * @param host The address of the Cruise Control server.
      * @param port The port the Cruise Control Server is listening on.
@@ -73,7 +73,7 @@ public interface CruiseControlApi {
     Future<CruiseControlRebalanceResponse> removeBroker(String host, int port, RemoveBrokerOptions options, String userTaskId);
 
     /**
-     *  Get the state of a specific task (e.g. a rebalance) from the Cruise Control server.
+     * Get the state of a specific task (e.g. a rebalance) from the Cruise Control server.
      *
      * @param host The address of the Cruise Control server.
      * @param port The port the Cruise Control Server is listening on.
@@ -84,8 +84,8 @@ public interface CruiseControlApi {
     Future<CruiseControlResponse> getUserTaskStatus(String host, int port, String userTaskID);
 
     /**
-     *  Issue a stop command to the Cruise Control server. This will halt any task (e.g. a rebalance) which is currently
-     *  in execution.
+     * Issue a stop command to the Cruise Control server. This will halt any task (e.g. a rebalance) which is currently
+     * in execution.
      *
      * @param host The address of the Cruise Control server.
      * @param port The port the Cruise Control Server is listening on.

@@ -2,7 +2,7 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.operator.topic.cruisecontrol;
+package io.strimzi.operator.common.operator.resource.cruisecontrol;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,6 @@ import io.strimzi.operator.common.ReconciliationLogger;
 import io.strimzi.operator.common.model.cruisecontrol.CruiseControlEndpoints;
 import io.strimzi.operator.common.model.cruisecontrol.CruiseControlHeaders;
 import io.strimzi.operator.common.model.cruisecontrol.CruiseControlParameters;
-import io.strimzi.operator.topic.TopicOperatorUtil;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -47,9 +46,9 @@ import static org.apache.logging.log4j.core.util.Throwables.getRootCause;
 /**
  * Cruise Control REST API client based on Java HTTP client.
  */
-public class CruiseControlClientImpl implements CruiseControlClient {
+class CruiseControlClientImpl implements CruiseControlClient {
     private static final ReconciliationLogger LOGGER = ReconciliationLogger.create(CruiseControlClientImpl.class);
-    
+
     private String serverHostname;
     private int serverPort;
     private boolean rackEnabled;
@@ -58,7 +57,7 @@ public class CruiseControlClientImpl implements CruiseControlClient {
     private boolean authEnabled;
     private String authUsername;
     private String authPassword;
-    
+
     private ExecutorService httpClientExecutor;
     private HttpClient httpClient;
     private ObjectMapper objectMapper;
@@ -92,14 +91,14 @@ public class CruiseControlClientImpl implements CruiseControlClient {
 
     @Override
     public String topicConfiguration(List<KafkaTopic> kafkaTopics) {
-        // compute payload
+        // compute the payload
         Map<Integer, List<KafkaTopic>> topicsByReplicas = kafkaTopics.stream()
             .collect(groupingBy(kt -> kt.getSpec().getReplicas()));
         Map<Integer, String> requestPayload = new HashMap<>();
         topicsByReplicas.entrySet().forEach(es -> {
             int rf = es.getKey();
             List<String> targetNames = topicsByReplicas.get(rf)
-                .stream().map(TopicOperatorUtil::topicName).collect(Collectors.toList());
+                .stream().map(kt -> topicName(kt)).collect(Collectors.toList());
             requestPayload.put(rf, String.join("|", targetNames));
         });
         String jsonPayload;
@@ -110,7 +109,7 @@ public class CruiseControlClientImpl implements CruiseControlClient {
             throw new RuntimeException("Failed to serialize request");
         }
         
-        // build request
+        // build the request
         URI requestUri = new UrlBuilder(serverHostname, serverPort, CruiseControlEndpoints.TOPIC_CONFIGURATION, sslEnabled)
             .withParameter(CruiseControlParameters.SKIP_RACK_AWARENESS_CHECK, String.valueOf(!rackEnabled))
             .withParameter(CruiseControlParameters.DRY_RUN, "false")
@@ -149,11 +148,11 @@ public class CruiseControlClientImpl implements CruiseControlClient {
     }
 
     @Override
-    public UserTasksResponse userTasks(Set<String> userTaskIds) {
-        // build request
+    public UserTasksResponse userTasks(Set<String> userTaskIds, boolean fetchComplete) {
+        // build the request
         URI requestUrl = new UrlBuilder(serverHostname, serverPort, CruiseControlEndpoints.USER_TASKS, sslEnabled)
             .withParameter(CruiseControlParameters.USER_TASK_IDS, new ArrayList<>(userTaskIds))
-            .withParameter(CruiseControlParameters.FETCH_COMPLETE, "false")
+            .withParameter(CruiseControlParameters.FETCH_COMPLETE, String.valueOf(fetchComplete))
             .withParameter(CruiseControlParameters.JSON, "true")
             .build();
         LOGGER.traceOp("Request URL: {}", requestUrl.toString());
@@ -243,6 +242,17 @@ public class CruiseControlClientImpl implements CruiseControlClient {
         } catch (Throwable t) {
             throw new RuntimeException(format("HTTP client build failed: %s", t.getMessage()));
         }
+    }
+
+    private static String topicName(KafkaTopic kafkaTopic) {
+        String tn = null;
+        if (kafkaTopic.getSpec() != null) {
+            tn = kafkaTopic.getSpec().getTopicName();
+        }
+        if (tn == null) {
+            tn = kafkaTopic.getMetadata().getName();
+        }
+        return tn;
     }
     
     private static void stopExecutor(ExecutorService executor, long timeoutMs) {

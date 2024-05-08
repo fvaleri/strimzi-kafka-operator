@@ -48,12 +48,11 @@ public class MockCruiseControl {
     private static final String STATE = "state";
     private static final String NO_GOALS = "no-goals";
     private static final String VERBOSE = "verbose";
-    private static final String USER_TASK = "user-task";
     private static final String RESPONSE = "response";
     
     public static final String REBALANCE_NO_GOALS_RESPONSE_UTID = REBALANCE + SEP + NO_GOALS + SEP + RESPONSE;
     public static final String REBALANCE_NO_GOALS_VERBOSE_RESPONSE_UTID = REBALANCE + SEP + NO_GOALS + SEP + VERBOSE + SEP + RESPONSE;
-    public static final String USER_TASK_REBALANCE_NO_GOALS = USER_TASK + SEP + REBALANCE + SEP + NO_GOALS;
+    public static final String USER_TASK_REBALANCE_NO_GOALS = REBALANCE + SEP + NO_GOALS;
     public static final String USER_TASK_REBALANCE_NO_GOALS_VERBOSE_UTID = USER_TASK_REBALANCE_NO_GOALS + SEP + VERBOSE;
     public static final String USER_TASK_REBALANCE_NO_GOALS_RESPONSE_UTID = USER_TASK_REBALANCE_NO_GOALS + SEP + RESPONSE;
     public static final String USER_TASK_REBALANCE_NO_GOALS_VERBOSE_RESPONSE_UTID = USER_TASK_REBALANCE_NO_GOALS_VERBOSE_UTID + SEP + RESPONSE;
@@ -91,7 +90,7 @@ public class MockCruiseControl {
      */
     public MockCruiseControl(int serverPort, File tlsKeyFile, File tlsCrtFile) {
         try {
-            ConfigurationProperties.logLevel("WARN");
+            ConfigurationProperties.logLevel("WARN"); // set to INFO to get expected and actual requests
             ConfigurationProperties.certificateAuthorityPrivateKey(tlsKeyFile.getAbsolutePath());
             ConfigurationProperties.certificateAuthorityCertificate(tlsCrtFile.getAbsolutePath());
 
@@ -361,8 +360,7 @@ public class MockCruiseControl {
     }
 
     /**
-     * Sets up the User Tasks endpoint. These endpoints expect the query to contain the user-task-id returned in the header of the response from
-     * the rebalance endpoints.
+     * Sets up the User Tasks endpoint.
      *
      * @param activeCalls The number of calls to the User Tasks endpoint that should return "Active" before "inExecution" is returned as the status.
      * @param inExecutionCalls The number of calls to the User Tasks endpoint that should return "InExecution" before "Completed" is returned as the status.
@@ -374,7 +372,7 @@ public class MockCruiseControl {
         JsonBody jsonActive = new JsonBody(TestUtils.jsonFromResource(CC_JSON_ROOT + "CC-User-task-rebalance-no-goals-Active.json"));
         JsonBody jsonInExecution = new JsonBody(TestUtils.jsonFromResource(CC_JSON_ROOT + "CC-User-task-rebalance-no-goals-inExecution.json"));
         JsonBody jsonCompleted = new JsonBody(TestUtils.jsonFromResource(CC_JSON_ROOT + "CC-User-task-rebalance-no-goals-completed.json"));
-
+        
         // The first activeCalls times respond that with a status of "Active"
         server
                 .when(
@@ -390,7 +388,6 @@ public class MockCruiseControl {
                 .respond(
                         response()
                                 .withBody(jsonActive)
-                                .withHeaders(header("User-Task-ID", USER_TASK_REBALANCE_NO_GOALS_RESPONSE_UTID))
                                 .withDelay(TimeUnit.SECONDS, 0));
 
         // The next inExecutionCalls times respond that with a status of "InExecution"

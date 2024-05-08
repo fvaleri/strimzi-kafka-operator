@@ -527,26 +527,6 @@ public final class TestUtils {
     }
 
     /**
-     * Creates an empty file in the default temporary-file directory with an UUID as prefix and .tmp as suffix.
-     * 
-     * @return The empty file just created.
-     */
-    public static File tempFile() {
-        return tempFile(null);
-    }
-
-    /**
-     * Creates an empty file in the default temporary-file directory with an UUID as prefix and given suffix.
-     * 
-     * @param suffix The suffix of the empty file (default: .tmp).
-     * 
-     * @return The empty file just created.
-     */
-    public static File tempFile(String suffix) {
-        return tempFile(null, suffix);
-    }
-
-    /**
      * Creates an empty file in the default temporary-file directory, using the given prefix and suffix.
      * 
      * @param prefix The prefix of the empty file (default: UUID).

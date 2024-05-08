@@ -2,7 +2,7 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.operator.topic.cruisecontrol;
+package io.strimzi.operator.common.operator.resource.cruisecontrol;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.strimzi.api.kafka.model.topic.KafkaTopic;
@@ -61,7 +61,7 @@ public interface CruiseControlClient extends AutoCloseable {
     /**
      * Send a POST request to {@code topic_configuration} endpoint.
      * This can be used to request replication factor changes (async operation).
-     * 
+     *
      * @param kafkaTopics List of Kafka topics.
      * @return The user task id.
      */
@@ -70,11 +70,12 @@ public interface CruiseControlClient extends AutoCloseable {
     /**
      * Send a GET request to {@code user_tasks} endpoint.
      * This can be used to check a task execution result (sync operation).
-     * 
-     * @param userTaskIds Set of user task ids.
+     *
+     * @param userTaskIds List of user task ids.
+     * @param fetchComplete Whether to return the original request's response.
      * @return User tasks response.
      */
-    UserTasksResponse userTasks(Set<String> userTaskIds);
+    UserTasksResponse userTasks(Set<String> userTaskIds, boolean fetchComplete);
 
     /**
      * Get the error message from HTTP response.
@@ -86,8 +87,6 @@ public interface CruiseControlClient extends AutoCloseable {
     
     /**
      * Topic names grouped by replication factor value.
-     * In order to support batch requests, we send a JSON payload where, for each RF value, 
-     * we have a simple regex like topic1|topic2|topic3 (i.e. a group by operation).
      * 
      * @param topicByReplicationFactor Topic names grouped by replication factor value.
      */
@@ -108,13 +107,15 @@ public interface CruiseControlClient extends AutoCloseable {
      * @param requestURL Request URL.
      * @param userTaskId User task id.
      * @param startMs Start time in ms.
+     * @param originalResponse Original response.
      */
     record UserTask(
         @JsonProperty("Status") String status,
         @JsonProperty("ClientIdentity") String clientIdentity,
         @JsonProperty("RequestURL") String requestURL,
         @JsonProperty("UserTaskId") String userTaskId,
-        @JsonProperty("StartMs") long startMs
+        @JsonProperty("StartMs") long startMs,
+        @JsonProperty("originalResponse") String originalResponse
     ) { }
 
     /**
@@ -157,7 +158,8 @@ public interface CruiseControlClient extends AutoCloseable {
          * The task has been completed with errors.
          */
         COMPLETED_WITH_ERROR("CompletedWithError");
-        
+
+        private static final List<TaskState> CACHED_VALUES = List.of(values());
         private final String value;
         TaskState(String value) {
             this.value = value;
@@ -169,15 +171,25 @@ public interface CruiseControlClient extends AutoCloseable {
         }
 
         /**
+         * Use this instead of values() to avoid creating a new array each time.
+         * 
+         * @return enumerated values in the same order as values()
+         */
+        public static List<TaskState> cachedValues() {
+            return CACHED_VALUES;
+        }
+
+        /**
          * Get the enum constant by value.
          * 
          * @param value Value.
          * @return Constant.
          */
         public static TaskState get(String value) {
-            Optional<TaskState> constant = List.of(values()).stream()
+            Optional<TaskState> constant = cachedValues().stream()
                 .filter(v -> v.toString().equals(value)).findFirst();
             return constant.orElseThrow();
         }
     }
 }
+
