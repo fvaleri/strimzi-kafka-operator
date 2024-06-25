@@ -339,7 +339,7 @@ class BatchingTopicControllerTest {
 
         // test
         var results = new BatchingTopicController(config, Map.of("key", "VALUE"), admin, client, metrics, replicasChangeHandler)
-            .checkReplicasChanges(reconcilableTopics, currentStatesOrError);
+            .handleReplicasChanges(reconcilableTopics, currentStatesOrError);
 
         if (cruiseControlEnabled) {
             assertThat(results.ok().count(), is(1L));
@@ -413,7 +413,7 @@ class BatchingTopicControllerTest {
         
         // run test
         var results = new BatchingTopicController(config, Map.of("key", "VALUE"), admin, client, metrics, replicasChangeHandler)
-            .checkReplicasChanges(reconcilableTopics, currentStatesOrError);
+            .handleReplicasChanges(reconcilableTopics, currentStatesOrError);
 
         assertThat(results.ok().count(), is(1L));
         assertThat(results.ok().findFirst().get().getKey().kt().getStatus().getReplicasChange(), is(nullValue()));
@@ -480,7 +480,7 @@ class BatchingTopicControllerTest {
 
         // run test
         var results = new BatchingTopicController(config, Map.of("key", "VALUE"), admin, client, metrics, replicasChangeHandler)
-            .checkReplicasChanges(reconcilableTopics, currentStatesOrError);
+            .handleReplicasChanges(reconcilableTopics, currentStatesOrError);
         
         assertThat(results.ok().count(), is(1L));
         assertThat(results.ok().findFirst().get().getKey().kt().getStatus().getReplicasChange(), is(nullValue()));
@@ -616,7 +616,7 @@ class BatchingTopicControllerTest {
 
     @ParameterizedTest
     @ValueSource(strings = { "min.insync.replicas, compression.type" })
-    public void shouldIgnoreAndWarnWithAlterableConfigOnCreation(String alterableConfig, KafkaCluster cluster) throws InterruptedException, ExecutionException {
+    public void shouldIgnoreAndWarnWithAlterableConfigOnCreation(String alterableConfig, KafkaCluster cluster) throws InterruptedException {
         admin[0] = Admin.create(Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers()));
         var adminSpy = Mockito.spy(admin[0]);
         var config = Mockito.mock(TopicOperatorConfig.class);
