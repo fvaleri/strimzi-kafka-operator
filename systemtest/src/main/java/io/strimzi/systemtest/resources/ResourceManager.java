@@ -491,7 +491,7 @@ public class ResourceManager {
     public static <T extends CustomResource<? extends Spec, ? extends Status>> boolean waitForResourceStatus(MixedOperation<T, ?, ?> operation, String kind, String namespace, String name, Enum<?> statusType, ConditionStatus conditionStatus, long resourceTimeoutMs) {
         LOGGER.log(ResourceManager.getInstance().determineLogLevel(), "Waiting for {}: {}/{} will have desired state: {}", kind, namespace, name, statusType);
 
-        TestUtils.waitFor(String.format("%s: %s#%s will have desired state: %s", kind, namespace, name, statusType),
+        TestUtils.waitFor(String.format("%s: %s/%s will have desired state: %s", kind, namespace, name, statusType),
             TestConstants.POLL_INTERVAL_FOR_RESOURCE_READINESS, resourceTimeoutMs,
             () -> operation.inNamespace(namespace)
                 .withName(name)
